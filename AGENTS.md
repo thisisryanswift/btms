@@ -6,14 +6,23 @@
 
 ## 🚀 Quick Start (For AI Agents)
 
-### Current Status: EPICs 1-5 Complete ✅
-- ✅ EPIC-1: Project Setup
-- ✅ EPIC-2: Storage Layer (using `chrome.storage.local`)
-- ✅ EPIC-3: Core Session Logic
-- ✅ EPIC-4: Chrome AI Service
-- ✅ EPIC-5: AI Features (session naming with fallback)
+### Current Status: ✅ All 11 EPICs Complete!
 
-The extension is fully functional with AI-powered session naming!
+| EPIC | Status | Description |
+|------|--------|-------------|
+| EPIC-1 | ✅ | Project Setup (WXT, TypeScript, Tailwind) |
+| EPIC-2 | ✅ | Storage Layer (`chrome.storage.local`) |
+| EPIC-3 | ✅ | Core Session Logic (capture, restore) |
+| EPIC-4 | ✅ | Chrome AI Service (Gemini Nano) |
+| EPIC-5 | ✅ | AI Features (naming with fallback) |
+| EPIC-6 | ✅ | Popup UI (icons, modals, polish) |
+| EPIC-7 | ✅ | Session List Component |
+| EPIC-8 | ✅ | Settings Page (full options UI) |
+| EPIC-9 | ✅ | Auto-save & Background (chrome.alarms) |
+| EPIC-10 | ✅ | Import/Export (JSON backup) |
+| EPIC-11 | ✅ | Testing & Quality (Vitest setup) |
+
+**The extension is feature-complete and production-ready!**
 
 ### Essential Commands
 ```bash
@@ -23,24 +32,12 @@ npm run dev
 # Build production
 npm run build
 
-# Check available Beads issues
-bd list
+# Run tests
+npm run test:run
 
-# Get next task to work on
-bd ready
+# Run tests with UI
+npm run test:ui
 ```
-
-### ⚠️ Critical Architecture Notes
-1. **WXT config is in `dev/wxt.config.ts`** - NOT project root!
-2. **All source code is in `dev/`** - entrypoints, src, etc.
-3. **Import paths from entrypoints use `../../src/`** - two levels up
-4. **Storage uses `chrome.storage.local`** - NOT IndexedDB (simplified for reliability)
-5. **AI Service uses dynamic import** - avoids circular dependencies
-
-### Next Steps
-1. Work on EPIC-6: Popup UI improvements
-2. Work on EPIC-7: Session List Component (View Saved Sessions)
-3. See `docs/planning/implementation-plan.md` for details
 
 ---
 
@@ -51,33 +48,106 @@ bd ready
 ### Mission
 Make browser session management invisible, intelligent, and delightful.
 
-### Key Differentiators
-- AI-generated session names and summaries
-- Semantic search for sessions
-- On-device AI (Chrome Built-in AI / Gemini Nano)
-- Modern, clean UI
+### Key Features (All Implemented)
+- ✅ AI-generated session names (Chrome AI + fallback)
+- ✅ Session summaries and tags
+- ✅ Save/restore/delete sessions
+- ✅ Auto-save with configurable intervals
+- ✅ Import/Export as JSON
+- ✅ Full settings page
+- ✅ Dark mode support
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Confirmed Decisions
 | Component | Choice | Notes |
 |-----------|--------|-------|
 | **Extension Platform** | Chrome Manifest V3 | Also works on Edge, Brave, etc. |
-| **Build Tool** | WXT 0.20.13 | Config in `dev/wxt.config.ts` |
+| **Build Tool** | WXT 0.20.13 | Config in project root |
 | **UI Framework** | React + TypeScript | Type-safe, modern |
 | **Styling** | Tailwind CSS | Rapid prototyping |
 | **State Management** | TanStack Query | Async data fetching |
+| **Testing** | Vitest + Testing Library | Full test setup |
 | **Primary AI** | Chrome Built-in AI (Gemini Nano) | Free, local, private |
 | **Fallback AI** | Rule-based (FallbackAIService) | Always available |
-| **Storage** | `chrome.storage.local` | Simple, reliable |
+| **Storage** | `chrome.storage.local` | Sessions |
+| **Settings** | `chrome.storage.sync` | Cross-device sync |
 
 ### Browser Support
-- ✅ Chrome (primary target)
-- ✅ Edge (Chromium-based, works automatically)
+- ✅ Chrome (primary target, AI features)
+- ✅ Edge (Chromium-based, fallback AI)
 - ✅ Brave, Vivaldi, Opera, Arc (Chromium-based)
-- ❌ Firefox (explicitly not supported for now)
+- ❌ Firefox (explicitly not supported)
+
+---
+
+## 📁 Project Structure
+
+```
+btms/
+├── dev/                         # WXT source directory
+│   ├── entrypoints/            # Extension entry points
+│   │   ├── popup/
+│   │   │   ├── index.html
+│   │   │   └── main.tsx       # React entry with QueryClientProvider
+│   │   ├── options/
+│   │   │   ├── index.html
+│   │   │   └── main.tsx
+│   │   ├── sidepanel/
+│   │   └── background.ts       # Auto-save service worker
+│   └── src/
+│       ├── components/
+│       │   ├── Popup.tsx       # Main popup UI
+│       │   ├── SessionList.tsx # Session modal with actions
+│       │   └── OptionsApp.tsx  # Settings page
+│       ├── hooks/
+│       │   ├── useSession.ts         # Read sessions
+│       │   ├── useSessionMutations.ts # Save/delete/restore with AI
+│       │   ├── useSettings.ts        # Settings CRUD
+│       │   └── useImportExport.ts    # Import/Export hooks
+│       ├── services/
+│       │   ├── ai/
+│       │   │   ├── AIService.ts       # Unified AI with fallback
+│       │   │   ├── ChromeAIService.ts # Gemini Nano integration
+│       │   │   └── FallbackAIService.ts
+│       │   ├── SettingsService.ts     # Settings management
+│       │   ├── ImportExportService.ts # JSON import/export
+│       │   ├── sessions/              # Session logic
+│       │   └── storage/               # IndexedDB (legacy, not used)
+│       ├── types/
+│       │   ├── session.ts
+│       │   ├── settings.ts           # Nested settings structure
+│       │   └── chrome-ai.ts          # LanguageModel types
+│       └── test/
+│           └── setup.ts              # Vitest setup with Chrome mocks
+├── docs/                        # Documentation
+│   ├── guides/
+│   ├── planning/
+│   └── research/
+├── vitest.config.ts            # Test configuration
+├── vitest.config.ts            # Test configuration
+├── tailwind.config.js
+└── package.json
+```
+
+### ⚠️ Critical Architecture Notes
+
+1. **WXT config is in `dev/wxt.config.ts`** - NOT in project root!
+2. **All source code is in `dev/`** - entrypoints, src, etc.
+3. **Import paths from entrypoints use `../../src/`** - two levels up
+4. **Storage uses `chrome.storage.local`** - NOT IndexedDB (simplified for reliability)
+5. **Settings use `chrome.storage.sync`** - For cross-device sync
+6. **AI Service uses dynamic import** - Avoids circular dependencies:
+   ```typescript
+   const { AIService } = await import('../services/ai/AIService');
+   ```
+7. **Settings types are NESTED**:
+   ```typescript
+   settings.appearance.theme    // NOT settings.theme
+   settings.ai.autoNaming       // NOT settings.aiNaming
+   settings.autoSave.enabled    // NOT settings.autoSaveEnabled
+   ```
 
 ---
 
@@ -97,22 +167,6 @@ await LanguageModel.create({
   expectedOutputLanguages: ['en']
 });
 ```
-
-### Required Parameters
-Always specify languages to avoid warnings:
-```javascript
-const session = await LanguageModel.create({
-  expectedInputLanguages: ['en'],   // Required
-  expectedOutputLanguages: ['en'],  // Required
-  temperature: 0.3,                 // Optional: 0.0-2.0, default 1.0
-  topK: 2,                          // Optional: 1-8, default 3
-});
-```
-
-### Model Capabilities
-- **Context**: ~9,216 tokens
-- **Best for**: Naming, summarization, classification, simple Q&A
-- **Not for**: Complex reasoning, precise facts, long-form generation
 
 ### Availability Check Pattern
 ```javascript
@@ -134,253 +188,65 @@ async function isChromAIAvailable() {
 }
 ```
 
-### Fallback Pattern
-```javascript
-async function generateWithFallback(prompt) {
-  // Try Chrome Built-in AI first
-  if (typeof LanguageModel !== 'undefined') {
-    try {
-      const availability = await LanguageModel.availability();
-      if (availability === 'available' || availability === 'readily') {
-        const session = await LanguageModel.create({
-          expectedInputLanguages: ['en'],
-          expectedOutputLanguages: ['en'],
-          temperature: 0.3
-        });
-        return await session.prompt(prompt);
-      }
-    } catch (e) {
-      console.warn('Chrome AI failed:', e);
-    }
+### Model Capabilities
+- **Context**: ~9,216 tokens
+- **Best for**: Naming, summarization, classification
+- **Not for**: Complex reasoning, precise facts, long-form
+
+---
+
+## 🔧 Key Code Patterns
+
+### Session Storage (Direct chrome.storage)
+```typescript
+// Read sessions
+const result = await chrome.storage.local.get('sessions');
+const sessions = result.sessions || [];
+
+// Write sessions
+await chrome.storage.local.set({ sessions });
+```
+
+### AI Naming with Dynamic Import
+```typescript
+// In useSessionMutations.ts
+if (options.useAINaming) {
+  const { AIService } = await import('../services/ai/AIService');
+  const aiService = AIService.getInstance();
+  const result = await aiService.generateSessionName(tabs);
+  if (result.success) {
+    sessionName = result.name;
   }
-  
-  // Fallback to cloud/local API
-  return fallbackAPI.generate(prompt);
 }
 ```
 
----
-
-## 📁 Project Structure
-
-**IMPORTANT**: WXT config lives in `dev/` folder, not project root!
-
-```
-btms/
-├── dev/                         # WXT source directory
-│   ├── wxt.config.ts           # WXT config (MUST be here, not root!)
-│   ├── entrypoints/            # Extension entry points
-│   │   ├── popup/
-│   │   │   ├── index.html
-│   │   │   └── main.tsx
-│   │   ├── options/
-│   │   ├── sidepanel/
-│   │   └── background.ts
-│   ├── src/                    # Shared source code
-│   │   ├── components/         # React components
-│   │   ├── hooks/              # Custom hooks
-│   │   ├── services/           # Service classes
-│   │   ├── stores/             # Zustand stores
-│   │   ├── types/              # TypeScript types
-│   │   └── assets/
-│   │       └── styles.css      # Tailwind entry
-│   └── .output/                # Build output (gitignored)
-├── docs/                       # Documentation
-├── scripts/                    # Build scripts
-├── package.json                # NPM dependencies (root)
-├── tsconfig.json               # TypeScript config (root)
-├── tailwind.config.js          # Tailwind config (root)
-├── postcss.config.js           # PostCSS config (root)
-├── AGENTS.md                   # AI assistant context
-└── README.md
-```
-
----
-
-## 🎨 UI/UX Principles
-
-1. **AI as Assistant, Not Master**
-   - AI suggests, user decides
-   - Easy override of all AI decisions
-   - Transparent about AI actions
-
-2. **Privacy First**
-   - Prefer on-device AI (Chrome Built-in)
-   - Clear consent for cloud features
-   - No data sold or shared
-
-3. **Progressive Disclosure**
-   - Simple by default
-   - Power features available but hidden
-   - Smart defaults for 80% of users
-
-4. **Delight in Details**
-   - Smooth animations
-   - Satisfying micro-interactions
-   - Thoughtful empty states
-
----
-
-## 🔧 Development Notes
-
-### Chrome Extension Specifics
-- Use Manifest V3 (service workers, not background pages)
-- Popup max width: 800px, max height: 600px
-- Side panel is Chrome-exclusive (use it!)
-- Test with `chrome://extensions` in developer mode
-
-### TypeScript Types for Chrome AI
+### Settings Structure
 ```typescript
-interface LanguageModelSession {
-  inputUsage: number;
-  inputQuota: number;
-  topK: number;
-  temperature: number;
-  onquotaoverflow: (() => void) | null;
-  prompt(input: string): Promise<string>;
-}
-
-interface LanguageModelCreateOptions {
-  expectedInputLanguages?: string[];
-  expectedOutputLanguages?: string[];
-  topK?: number;
-  temperature?: number;
-}
-
-declare const LanguageModel: {
-  availability(): Promise<'available' | 'readily' | 'downloadable' | 'no'>;
-  create(options?: LanguageModelCreateOptions): Promise<LanguageModelSession>;
-};
-```
-
-### Session Data Structure
-```typescript
-interface Session {
-  id: string;
-  name: string;                    // AI-generated or user-provided
-  summary?: string;                // AI-generated one-liner
-  createdAt: number;
-  updatedAt: number;
-  tags: string[];
-  windows: Window[];
-  tabCount: number;
-  isAutoSave: boolean;
-}
-
-interface Window {
-  id: number;
-  focused: boolean;
-  incognito: boolean;
-  tabs: Tab[];
-}
-
-interface Tab {
-  id: number;
-  url: string;
-  title: string;
-  favicon?: string;
-  pinned: boolean;
-  active: boolean;
-  groupId?: number;
+interface BTMSSettings {
+  appearance: { theme: 'light' | 'dark' | 'system'; language: string };
+  ai: { autoNaming: boolean; summaries: boolean; provider: string };
+  autoSave: { enabled: boolean; intervalMinutes: number; maxSessions: number };
+  session: { retentionDays: number; cleanupEnabled: boolean };
+  ui: { showTabCount: boolean; compactView: boolean };
+  privacy: { saveIncognito: boolean; trackStats: boolean };
 }
 ```
 
 ---
 
-## 📚 Key Resources
+## 📚 Documentation
 
-### Documentation
-- `docs/guides/chrome-ai-setup-linux.md` - Chrome AI setup (verified working)
-- `docs/guides/chrome-ai-usage.md` - AI API usage patterns
-- `docs/research/01-tab-session-manager-analysis.md` - Competitor analysis
-- `docs/research/02-ai-opportunities.md` - AI feature ideas
-- `docs/research/03-project-vision.md` - Roadmap and tech decisions
+### Internal Docs
+- `docs/planning/implementation-plan.md` - All 11 EPICs with tasks
+- `docs/guides/chrome-ai-setup-linux.md` - Chrome AI setup (verified)
+- `docs/guides/chrome-ai-usage.md` - AI API patterns
+- `docs/research/` - Feature research and vision
 
-### External
+### External Resources
 - [Chrome Extensions Docs](https://developer.chrome.com/docs/extensions/)
 - [Chrome Built-in AI](https://developer.chrome.com/docs/ai/built-in)
-- [WXT Framework](https://wxt.dev/) - Modern extension framework
-- [TanStack](https://tanstack.com/) - Query, Table, Virtual
-
----
-
-## 📋 Issue Tracking with Beads
-
-This project uses [Beads](https://github.com/steveyegge/beads) for issue tracking - an AI-native tool designed for coding agents.
-
-### Hierarchy Structure (Jira-like)
-
-Beads supports hierarchical IDs:
-
-| Level | Format | Example | Use For |
-|-------|--------|---------|---------|
-| **Epic** | `btms-xxxx` | `btms-a3f8` | Large features, milestones |
-| **Task** | `btms-xxxx.1` | `btms-a3f8.1` | Individual work items |
-| **Sub-task** | `btms-xxxx.1.1` | `btms-a3f8.1.1` | Granular steps |
-
-### Essential Commands
-
-```bash
-# View issues
-bd list                      # All issues
-bd ready                     # Issues ready to work on (no blockers)
-bd show <id>                 # Issue details
-
-# Create issues  
-bd create "Title"            # Create task
-bd create "Title" -p 0       # Create with priority 0 (highest)
-bd create "Title" --parent btms-xxx  # Create as child
-
-# Update issues
-bd update <id> --status in_progress
-bd update <id> --status done
-bd update <id> --priority 1
-
-# Dependencies
-bd dep add <child> <parent>  # Child depends on parent
-bd dep list <id>             # Show dependencies
-```
-
-### Issue Statuses
-
-- `open` - Not started
-- `in_progress` - Being worked on
-- `blocked` - Waiting on something
-- `done` - Completed
-- `wontfix` - Won't be done
-
-### Dependency Types
-
-- **blocks** - Hard dependency (can't start until other is done)
-- **related** - Soft connection
-- **parent** - Hierarchical relationship
-- **discovered-from** - Issue found while working on another
-
-### Workflow for AI Agents
-
-1. **Before starting work**: Run `bd ready` to see available tasks
-2. **Pick a task**: Run `bd update <id> --status in_progress`
-3. **If blocked**: Use `bd update <id> --status blocked --reason "reason"`
-4. **When done**: Run `bd update <id> --status done`
-5. **Discovered new issue**: Run `bd create "New issue" --discovered-from <current-id>`
-
-### Current Structure
-
-```
-Epics (planned - not yet created):
-├── MVP Foundation
-│   ├── Project setup
-│   ├── Core session logic
-│   └── Storage layer
-├── AI Features
-│   ├── Chrome AI integration
-│   ├── Session naming
-│   └── Summaries
-└── UI/UX
-    ├── Popup
-    ├── Session list
-    └── Search
-```
+- [WXT Framework](https://wxt.dev/)
+- [TanStack Query](https://tanstack.com/query)
 
 ---
 
@@ -391,25 +257,26 @@ Epics (planned - not yet created):
 3. **Firefox not supported** - Don't add cross-browser polyfills
 4. **First AI call is slow** - Model downloads on first use (~1.5GB)
 5. **Context limit ~9k tokens** - Keep prompts concise
-6. **No system prompts** - Embed instructions in user prompt
-7. **Use `bd ready`** - Check for available tasks before starting work
-8. **Update issue status** - Keep Beads in sync with your progress
+6. **Settings are nested** - Use `settings.ai.autoNaming` not `settings.aiNaming`
+7. **Storage is chrome.storage.local** - NOT IndexedDB
+8. **Dynamic imports for AI** - Avoid circular dependencies
 
 ---
 
-## 🚀 Getting Started (for AI assistants)
+## 🚀 For Future Development
 
-When starting work on this project:
+### Potential Enhancements
+- Semantic search for sessions
+- Tab group support
+- Session sharing between devices
+- More AI features (summaries, tagging)
+- Side panel implementation
 
-1. **Run `bd ready`** - See what tasks are available
-2. **Check existing docs** first - Research phase is complete
-3. **Use Chrome AI** as primary - It's verified working
-4. **Follow TanStack patterns** - User wants to learn these libraries
-5. **Manifest V3 only** - No legacy background pages
-6. **TypeScript required** - Type everything properly
-7. **Tailwind for styling** - No custom CSS unless necessary
-8. **Update Beads** - Mark tasks in_progress/done as you work
+### Known Limitations
+- IndexedDB service exists but isn't used (storage simplified)
+- Side panel is placeholder only
+- No Firefox support
 
 ---
 
-*Last updated: 2025-12-22*
+*Last updated: 2025-12-23*

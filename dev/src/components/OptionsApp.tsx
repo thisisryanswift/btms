@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSettings, useUpdateSettings, useResetSettings, useExportSettings, useImportSettings } from '../hooks/useSettings';
+import { useExportSessions, useImportSessions } from '../hooks/useImportExport';
 import type { BTMSSettings } from '../types/settings';
 
 export function OptionsApp() {
@@ -8,13 +9,27 @@ export function OptionsApp() {
   const resetSettingsMutation = useResetSettings();
   const exportSettingsMutation = useExportSettings();
   const importSettingsMutation = useImportSettings();
+  const exportSessionsMutation = useExportSessions();
+  const importSessionsMutation = useImportSessions();
   const [isDirty, setIsDirty] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState('general');
 
   // Handle form field changes
-  const handleSettingChange = (key: keyof BTMSSettings, value: any) => {
+  const handleSettingChange = (key: string, value: any) => {
     if (settings) {
-      const updatedSettings = { ...settings, [key]: value };
+      const keys = key.split('.');
+      let updatedSettings = { ...settings };
+      let current: any = updatedSettings;
+      
+      // Navigate to the nested property
+      for (let i = 0; i < keys.length - 1; i++) {
+        current[keys[i]] = { ...current[keys[i]] };
+        current = current[keys[i]];
+      }
+      
+      // Set the final property
+      current[keys[keys.length - 1]] = value;
+      
       updateSettingsMutation.mutate(updatedSettings);
       setIsDirty(true);
       // Clear dirty state after successful save
@@ -207,7 +222,55 @@ export function OptionsApp() {
       <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Privacy & Data</h3>
       
       <div className="space-y-4">
-        {/* Data Export */}
+        {/* Session Export */}
+        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Export/Import Sessions</h4>
+          <div className="flex space-x-3 mb-4">
+            <button
+              onClick={() => exportSessionsMutation.mutate()}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              disabled={exportSessionsMutation.isPending}
+            >
+              {exportSessionsMutation.isPending ? 'Exporting...' : 'Export All Sessions'}
+            </button>
+            
+            <label className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500">
+              Import Sessions
+              <input
+                type="file"
+                accept=".json"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      try {
+                        const jsonString = event.target?.result as string;
+                        importSessionsMutation.mutate(jsonString, {
+                          onSuccess: (result) => {
+                            alert(`Import completed! ${result.imported} sessions imported, ${result.duplicates} skipped as duplicates.`);
+                            if (result.errors.length > 0) {
+                              console.warn('Import warnings:', result.errors);
+                            }
+                          },
+                          onError: (error) => {
+                            alert(`Import failed: ${error.message}`);
+                          }
+                        });
+                      } catch (error) {
+                        alert('Invalid file format. Please select a valid BTMS export file.');
+                      }
+                    };
+                    reader.readAsText(file);
+                  }
+                }}
+              />
+            </label>
+          </div>
+        </div>
+        
+        {/* Settings Export */}
         <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
           <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Export/Import Settings</h4>
           <div className="flex space-x-3">
