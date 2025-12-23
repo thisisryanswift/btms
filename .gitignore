@@ -1,0 +1,80 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.output/
+.wxt/
+build/
+*.crx
+*.pem
+*.zip
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+*.key
+
+# IDE and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# TypeScript
+*.tsbuildinfo
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Cache
+.cache/
+.eslintcache
+.stylelintcache
+*.cache
+
+# Local development
+.local/
+
+# Chrome extension unpacked (if you unzip for testing)
+unpacked/
+
+# Beads local files (keep issues.jsonl, ignore runtime files)
+.beads/*.db
+.beads/*.db-shm
+.beads/*.db-wal
+.beads/*.sock
+.beads/*.pid
+.beads/*.lock
+.beads/*.log
