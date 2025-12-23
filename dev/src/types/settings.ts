@@ -19,9 +19,10 @@ export interface BTMSSettings {
     enabled: boolean;
     intervalMinutes: number;
     maxSessions: number;
+    saveOnStartup: boolean;
   };
 
-session: {
+  session: {
     retentionDays: number;
     cleanupEnabled: boolean;
     lazyLoadTabs: boolean;
@@ -36,6 +37,7 @@ session: {
   privacy: {
     saveIncognito: boolean;
     trackStats: boolean;
+    excludeUrls: string[];
   };
 }
 
@@ -57,6 +59,7 @@ export const DEFAULT_SETTINGS: BTMSSettings = {
     enabled: false,
     intervalMinutes: 30,
     maxSessions: 10,
+    saveOnStartup: true,
   },
   session: {
     retentionDays: 30,
@@ -71,5 +74,6 @@ export const DEFAULT_SETTINGS: BTMSSettings = {
   privacy: {
     saveIncognito: false,
     trackStats: true,
+    excludeUrls: [],
   },
 };

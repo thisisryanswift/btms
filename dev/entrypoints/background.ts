@@ -13,6 +13,13 @@ export default defineBackground(() => {
         await this.loadSettings();
         this.setupEventListeners();
         await this.setupAutoSave();
+
+        // Handle startup save
+        if (this.settings?.autoSave?.saveOnStartup) {
+          console.log('🚀 Browser started, performing startup save...');
+          await this.performAutoSave('startup');
+        }
+
         console.log('✅ BTMS Background Service Worker initialized');
       } catch (error) {
         console.error('❌ Failed to initialize background service:', error);
@@ -22,15 +29,29 @@ export default defineBackground(() => {
     async loadSettings() {
       try {
         const result = await chrome.storage.sync.get(['btms_settings']);
-        this.settings = result.btms_settings || {
-          autoSave: { enabled: false, intervalMinutes: 30, maxSessions: 10 },
-          ai: { autoNaming: true, summaries: true }
+        const defaults = {
+          autoSave: { enabled: false, intervalMinutes: 30, maxSessions: 10, saveOnStartup: true },
+          ai: { autoNaming: true, summaries: true, tags: true, provider: 'chrome' },
+          session: { lazyLoadTabs: false }
         };
+        this.settings = this.deepMerge(defaults, result.btms_settings || {});
         console.log('📋 Settings loaded:', this.settings);
       } catch (error) {
         console.error('❌ Failed to load settings:', error);
-        this.settings = { autoSave: { enabled: false, intervalMinutes: 30, maxSessions: 10 } };
+        this.settings = { autoSave: { enabled: false, intervalMinutes: 30, maxSessions: 10, saveOnStartup: true } };
       }
+    }
+
+    private deepMerge(target: any, source: any) {
+      const result = { ...target };
+      for (const key in source) {
+        if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+          result[key] = this.deepMerge(target[key] || {}, source[key]);
+        } else if (source[key] !== undefined) {
+          result[key] = source[key];
+        }
+      }
+      return result;
     }
 
     setupEventListeners() {
@@ -130,9 +151,14 @@ export default defineBackground(() => {
     }
 
     async performAutoSave(trigger: string) {
-      if (!this.settings?.autoSave?.enabled && trigger !== 'manual') {
-        console.log('⏸️ Auto-save disabled, skipping');
-        return null;
+      // Check if this type of auto-save is enabled
+      if (trigger === 'startup') {
+        if (!this.settings?.autoSave?.saveOnStartup) return null;
+      } else if (trigger !== 'manual') {
+        if (!this.settings?.autoSave?.enabled) {
+          console.log('⏸️ Auto-save disabled, skipping');
+          return null;
+        }
       }
 
       console.log(`💾 Performing auto-save (trigger: ${trigger})...`);
@@ -142,7 +168,8 @@ export default defineBackground(() => {
         const { captureAllWindows } = await import('../src/services/sessions/capture');
         const { generatePrefixedSessionId } = await import('../src/lib/uuid');
         const captured = await captureAllWindows({
-          excludeIncognito: true,
+          excludeIncognito: !this.settings?.privacy?.saveIncognito,
+          excludeUrls: this.settings?.privacy?.excludeUrls || [],
           includeGroups: true,
         });
 
@@ -152,10 +179,27 @@ export default defineBackground(() => {
           return null;
         }
 
+        // Filter out "empty" sessions (e.g. only new tab)
+        const isOnlyNewTab = captured.windowCount === 1 &&
+          captured.tabCount === 1 &&
+          (captured.windows[0].tabs[0].url === 'chrome://newtab/' ||
+            captured.windows[0].tabs[0].url === 'about:newtab');
+
+        if (isOnlyNewTab && trigger !== 'manual') {
+          console.log('⏸️ Session only contains a new tab, skipping auto-save');
+          return null;
+        }
+
+        const tags = ['auto-save'];
+        if (trigger === 'startup') tags.push('startup');
+        if (trigger === 'interval') tags.push('scheduled');
+
         // Generate session data
         const sessionData = {
           id: generatePrefixedSessionId('auto'),
-          name: `Auto-save ${new Date().toLocaleString()}`,
+          name: trigger === 'startup'
+            ? `Startup ${new Date().toLocaleString()}`
+            : `Auto-save ${new Date().toLocaleString()}`,
           createdAt: Date.now(),
           updatedAt: Date.now(),
           windows: captured.windows,
@@ -163,7 +207,7 @@ export default defineBackground(() => {
           windowCount: captured.windowCount,
           isAutoSave: true,
           source: 'auto' as const,
-          tags: ['auto-save'],
+          tags,
         };
 
         // Save to storage using shared utility

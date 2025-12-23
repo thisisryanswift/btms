@@ -67,7 +67,7 @@ export function Popup() {
         </header>
 
         <main className="space-y-4">
-          
+
 
           <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
             <div className="flex items-start space-x-3">
@@ -116,7 +116,7 @@ export function Popup() {
                 </>
               )}
             </button>
-            <button 
+            <button
               onClick={handleViewSessions}
               className="w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
             >
@@ -146,12 +146,13 @@ export function Popup() {
           )}
         </main>
       </div>
-      
+
       {/* Session List Modal */}
-      <SessionList 
+      <SessionList
         sessions={sessionsQuery.data || []}
         isOpen={isSessionListOpen}
         onClose={handleCloseSessionList}
+        isLoading={sessionsQuery.isLoading}
       />
     </div>
   );

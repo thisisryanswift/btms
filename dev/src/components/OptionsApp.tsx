@@ -19,16 +19,16 @@ export function OptionsApp() {
       const keys = key.split('.');
       let updatedSettings = { ...settings };
       let current: any = updatedSettings;
-      
+
       // Navigate to the nested property
       for (let i = 0; i < keys.length - 1; i++) {
         current[keys[i]] = { ...current[keys[i]] };
         current = current[keys[i]];
       }
-      
+
       // Set the final property
       current[keys[keys.length - 1]] = value;
-      
+
       updateSettingsMutation.mutate(updatedSettings);
       setIsDirty(true);
       // Clear dirty state after successful save
@@ -51,7 +51,7 @@ export function OptionsApp() {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Appearance</h3>
-        
+
         <div className="space-y-4">
           {/* Theme Toggle */}
           <div className="flex items-center justify-between">
@@ -98,15 +98,13 @@ export function OptionsApp() {
             </div>
             <button
               onClick={() => settings && handleSettingChange('session.lazyLoadTabs', !settings.session.lazyLoadTabs)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings?.session.lazyLoadTabs ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
-              }`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings?.session.lazyLoadTabs ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
+                }`}
               disabled={!settings || updateSettingsMutation.isPending}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings?.session.lazyLoadTabs ? 'translate-x-6' : 'translate-x-1'
-                }`}
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings?.session.lazyLoadTabs ? 'translate-x-6' : 'translate-x-1'
+                  }`}
               />
             </button>
           </div>
@@ -118,7 +116,7 @@ export function OptionsApp() {
   const renderAISettings = () => (
     <div className="space-y-6">
       <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">AI Features</h3>
-      
+
       <div className="space-y-4">
         {/* AI Naming */}
         <div className="flex items-center justify-between">
@@ -128,15 +126,13 @@ export function OptionsApp() {
           </div>
           <button
             onClick={() => settings && handleSettingChange('ai.autoNaming', !settings.ai.autoNaming)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              settings?.ai.autoNaming ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
-            }`}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings?.ai.autoNaming ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
+              }`}
             disabled={!settings || updateSettingsMutation.isPending}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                settings?.ai.autoNaming ? 'translate-x-6' : 'translate-x-1'
-              }`}
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings?.ai.autoNaming ? 'translate-x-6' : 'translate-x-1'
+                }`}
             />
           </button>
         </div>
@@ -149,15 +145,13 @@ export function OptionsApp() {
           </div>
           <button
             onClick={() => settings && handleSettingChange('ai.summaries', !settings.ai.summaries)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              settings?.ai.summaries ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
-            }`}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings?.ai.summaries ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
+              }`}
             disabled={!settings || updateSettingsMutation.isPending}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                settings?.ai.summaries ? 'translate-x-6' : 'translate-x-1'
-              }`}
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings?.ai.summaries ? 'translate-x-6' : 'translate-x-1'
+                }`}
             />
           </button>
         </div>
@@ -188,7 +182,7 @@ export function OptionsApp() {
   const renderAutoSaveSettings = () => (
     <div className="space-y-6">
       <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Auto-Save</h3>
-      
+
       <div className="space-y-4">
         {/* Auto-Save Enabled */}
         <div className="flex items-center justify-between">
@@ -198,15 +192,13 @@ export function OptionsApp() {
           </div>
           <button
             onClick={() => settings && handleSettingChange('autoSave.enabled', !settings!.autoSave.enabled)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              settings?.autoSave.enabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
-            }`}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings?.autoSave.enabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
+              }`}
             disabled={!settings || updateSettingsMutation.isPending}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                settings?.autoSave.enabled ? 'translate-x-6' : 'translate-x-1'
-              }`}
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings?.autoSave.enabled ? 'translate-x-6' : 'translate-x-1'
+                }`}
             />
           </button>
         </div>
@@ -233,6 +225,25 @@ export function OptionsApp() {
             </div>
           </div>
         )}
+
+        {/* Save on Startup */}
+        <div className="flex items-center justify-between">
+          <div>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Save on Startup</label>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Capture currently open tabs when Chrome starts</p>
+          </div>
+          <button
+            onClick={() => settings && handleSettingChange('autoSave.saveOnStartup', !settings.autoSave.saveOnStartup)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings?.autoSave.saveOnStartup ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
+              }`}
+            disabled={!settings || updateSettingsMutation.isPending}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings?.autoSave.saveOnStartup ? 'translate-x-6' : 'translate-x-1'
+                }`}
+            />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -240,8 +251,22 @@ export function OptionsApp() {
   const renderPrivacySettings = () => (
     <div className="space-y-6">
       <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Privacy & Data</h3>
-      
+
       <div className="space-y-4">
+        {/* Exclude URLs */}
+        <div>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Excluded URLs</label>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">URLs matching these patterns will be excluded from sessions (one per line, e.g. *://localhost/*)</p>
+          <textarea
+            rows={4}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="*://internal.company.com/*"
+            value={settings?.privacy.excludeUrls.join('\n') || ''}
+            onChange={(e) => handleSettingChange('privacy.excludeUrls', e.target.value.split('\n').filter(url => url.trim() !== ''))}
+            disabled={!settings || updateSettingsMutation.isPending}
+          />
+        </div>
+
         {/* Session Export */}
         <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
           <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Export/Import Sessions</h4>
@@ -253,7 +278,7 @@ export function OptionsApp() {
             >
               {exportSessionsMutation.isPending ? 'Exporting...' : 'Export All Sessions'}
             </button>
-            
+
             <label className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500">
               Import Sessions
               <input
@@ -289,7 +314,7 @@ export function OptionsApp() {
             </label>
           </div>
         </div>
-        
+
         {/* Settings Export */}
         <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
           <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Export/Import Settings</h4>
@@ -316,7 +341,7 @@ export function OptionsApp() {
             >
               {exportSettingsMutation.isPending ? 'Exporting...' : 'Export Settings'}
             </button>
-            
+
             <label className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500">
               Import Settings
               <input
@@ -365,7 +390,7 @@ export function OptionsApp() {
   const renderAboutSection = () => (
     <div className="space-y-6">
       <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">About BTMS</h3>
-      
+
       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
@@ -446,11 +471,10 @@ export function OptionsApp() {
                 <button
                   key={section.id}
                   onClick={() => setActiveSection(section.id)}
-                  className={`w-full flex items-center space-x-3 px-3 py-2 text-left rounded-md transition-colors ${
-                    activeSection === section.id
-                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-medium'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
+                  className={`w-full flex items-center space-x-3 px-3 py-2 text-left rounded-md transition-colors ${activeSection === section.id
+                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-medium'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
                 >
                   <span>{section.icon}</span>
                   <span>{section.label}</span>

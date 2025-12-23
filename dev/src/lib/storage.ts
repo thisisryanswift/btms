@@ -49,3 +49,14 @@ export async function getSession(id: string): Promise<Session | null> {
     const sessions = await getSessions();
     return sessions.find(s => s.id === id) || null;
 }
+/**
+ * Update a session by ID
+ */
+export async function updateSession(id: string, updates: Partial<Session>): Promise<void> {
+    const sessions = await getSessions();
+    const index = sessions.findIndex(s => s.id === id);
+    if (index !== -1) {
+        sessions[index] = { ...sessions[index], ...updates, updatedAt: Date.now() };
+        await saveSessions(sessions);
+    }
+}

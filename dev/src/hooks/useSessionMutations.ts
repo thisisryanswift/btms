@@ -2,8 +2,24 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Session } from '../types/session';
 import { captureAllWindows } from '../services/sessions/capture';
 import { generateSessionId } from '../lib/uuid';
-import { addSession, deleteSession, getSession } from '../lib/storage';
+import { addSession, deleteSession, getSession, updateSession } from '../lib/storage';
 import { SettingsService } from '../services/SettingsService';
+
+export function useUpdateSession() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Session> }) => {
+      await updateSession(id, updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sessions'] });
+    },
+    onError: (error) => {
+      console.error('❌ Failed to update session:', error);
+    },
+  });
+}
 
 // Session capture using unified capture service
 async function captureCurrentSession(options: {
@@ -14,9 +30,14 @@ async function captureCurrentSession(options: {
 }): Promise<Session> {
   console.log('🚀 Capturing session...');
 
-  // Use unified capture function
+  // Get current settings
+  const settingsService = SettingsService.getInstance();
+  const settings = await settingsService.getSettings();
+
+  // Use unified capture function with settings
   const captured = await captureAllWindows({
-    excludeIncognito: true,
+    excludeIncognito: !settings.privacy.saveIncognito,
+    excludeUrls: settings.privacy.excludeUrls,
     includeGroups: true,
   });
 
