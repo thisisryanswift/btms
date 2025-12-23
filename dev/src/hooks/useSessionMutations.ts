@@ -1,7 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Session, SessionTab } from '../types/session';
+import type { Session } from '../types/session';
+import { captureAllWindows } from '../services/sessions/capture';
+import { generateSessionId } from '../lib/uuid';
+import { addSession, deleteSession, getSession } from '../lib/storage';
 
-// Simple session capture using chrome APIs
+// Session capture using unified capture service
 async function captureCurrentSession(options: {
   name?: string;
   autoSave?: boolean;
@@ -10,23 +13,14 @@ async function captureCurrentSession(options: {
 }): Promise<Session> {
   console.log('🚀 Capturing session...');
 
-  // Get all tabs
-  const tabs = await chrome.tabs.query({});
-  console.log(`📊 Found ${tabs.length} tabs`);
+  // Use unified capture function
+  const captured = await captureAllWindows({
+    excludeIncognito: true,
+    includeGroups: true,
+  });
 
-  // Transform to SessionTab format
-  const sessionTabs: SessionTab[] = tabs
-    .filter(tab => tab.id && tab.url && tab.title && !tab.incognito)
-    .map(tab => ({
-      id: tab.id!,
-      index: tab.index,
-      url: tab.url!,
-      title: tab.title!,
-      favicon: tab.favIconUrl,
-      pinned: tab.pinned || false,
-      active: tab.active || false,
-      windowId: tab.windowId,
-    }));
+  // Flatten tabs for AI naming
+  const allTabs = captured.windows.flatMap(w => w.tabs);
 
   // Generate AI name if requested and no manual name provided
   let sessionName = options.name;
@@ -36,8 +30,8 @@ async function captureCurrentSession(options: {
       // Import AI service dynamically to avoid circular imports
       const { AIService } = await import('../services/ai/AIService');
       const aiService = AIService.getInstance();
-      
-      const aiResult = await aiService.generateSessionName(sessionTabs);
+
+      const aiResult = await aiService.generateSessionName(allTabs);
       if (aiResult.success && aiResult.name) {
         sessionName = aiResult.name;
         console.log('✅ Generated AI name:', sessionName, '(using', aiResult.aiType, 'AI)');
@@ -49,41 +43,22 @@ async function captureCurrentSession(options: {
     }
   }
 
-  // Group by window
-  const windowsMap = new Map<number, SessionTab[]>();
-  sessionTabs.forEach(tab => {
-    const windowId = (tab as any).windowId || 0;
-    if (!windowsMap.has(windowId)) {
-      windowsMap.set(windowId, []);
-    }
-    windowsMap.get(windowId)!.push(tab);
-  });
-
-  // Create session
+  // Create session using captured data
   const session: Session = {
-    id: crypto.randomUUID(),
+    id: generateSessionId(),
     name: sessionName || `Session ${new Date().toLocaleString()}`,
     createdAt: Date.now(),
     updatedAt: Date.now(),
     tags: [],
-    windows: Array.from(windowsMap.entries()).map(([windowId, tabs]) => ({
-      id: windowId,
-      focused: false,
-      incognito: false,
-      state: 'normal' as const,
-      tabs,
-    })),
-    tabCount: sessionTabs.length,
-    windowCount: windowsMap.size,
+    windows: captured.windows,
+    tabCount: captured.tabCount,
+    windowCount: captured.windowCount,
     isAutoSave: options.autoSave ?? false,
     source: 'manual' as const,
   };
 
-  // Save to chrome.storage
-  const existing = await chrome.storage.local.get('sessions');
-  const sessions = existing.sessions || [];
-  sessions.unshift(session);
-  await chrome.storage.local.set({ sessions });
+  // Save to storage using shared utility
+  await addSession(session);
 
   console.log('✅ Session saved:', session.id);
   return session;
@@ -109,9 +84,7 @@ export function useDeleteSession() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const result = await chrome.storage.local.get('sessions');
-      const sessions = (result.sessions || []).filter((s: Session) => s.id !== id);
-      await chrome.storage.local.set({ sessions });
+      await deleteSession(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
@@ -125,12 +98,10 @@ export function useRestoreSession() {
   return useMutation({
     mutationFn: async (id: string) => {
       console.log('🔄 Restoring session:', id);
-      
-      // Get the session
-      const result = await chrome.storage.local.get('sessions');
-      const sessions = result.sessions || [];
-      const session = sessions.find((s: Session) => s.id === id);
-      
+
+      // Get the session using shared utility
+      const session = await getSession(id);
+
       if (!session) {
         throw new Error('Session not found');
       }
@@ -142,7 +113,7 @@ export function useRestoreSession() {
         if (window.tabs.length === 0) continue;
 
         console.log('🪟 Creating window with', window.tabs.length, 'tabs');
-        
+
         // Create window with tabs
         const newWindow = await chrome.windows.create({
           url: window.tabs.map(tab => tab.url),

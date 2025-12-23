@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback, memo } from 'react';
 import type { Session } from '../types/session';
 import { useDeleteSession, useRestoreSession } from '../hooks/useSessionMutations';
 import { useExportSessions } from '../hooks/useImportExport';
+import { downloadFile, generateExportFilename } from '../lib/download';
 
 interface SessionListProps {
   sessions: Session[];
@@ -10,13 +11,13 @@ interface SessionListProps {
 }
 
 // Memoized session item component to prevent unnecessary re-renders
-const SessionItem = memo(({ 
-  session, 
-  isExpanded, 
-  onToggle, 
-  onRestore, 
-  onDelete, 
-  onExport 
+const SessionItem = memo(({
+  session,
+  isExpanded,
+  onToggle,
+  onRestore,
+  onDelete,
+  onExport
 }: {
   session: Session;
   isExpanded: boolean;
@@ -56,7 +57,7 @@ const SessionItem = memo(({
   // Memoize tab list rendering for expanded view
   const expandedContent = useMemo(() => {
     if (!isExpanded) return null;
-    
+
     return (
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -72,11 +73,11 @@ const SessionItem = memo(({
                 {window.tabs.slice(0, 5).map((tab, tabIndex) => (
                   <div key={`${window.id}-${tabIndex}`} className="flex items-center space-x-2 text-gray-500 dark:text-gray-400 truncate">
                     {tab.favicon && (
-                      <img 
-                        src={tab.favicon} 
-                        alt="" 
+                      <img
+                        src={tab.favicon}
+                        alt=""
                         className="w-3 h-3 flex-shrink-0"
-                        loading="lazy" 
+                        loading="lazy"
                       />
                     )}
                     <span className="truncate">{tab.title}</span>
@@ -113,7 +114,7 @@ const SessionItem = memo(({
               </span>
             )}
           </div>
-          
+
           {/* Tags - memoized */}
           {session.tags.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
@@ -188,14 +189,14 @@ export function SessionList({ sessions, isOpen, onClose }: SessionListProps) {
   // Memoize filtered sessions for search performance
   const filteredSessions = useMemo(() => {
     if (!searchQuery.trim()) return sessions;
-    
+
     const query = searchQuery.toLowerCase();
-    return sessions.filter(session => 
+    return sessions.filter(session =>
       session.name.toLowerCase().includes(query) ||
       session.summary?.toLowerCase().includes(query) ||
       session.tags.some(tag => tag.toLowerCase().includes(query)) ||
       session.windows.some(window =>
-        window.tabs.some(tab => 
+        window.tabs.some(tab =>
           tab.title.toLowerCase().includes(query) ||
           tab.url.toLowerCase().includes(query)
         )
@@ -218,7 +219,7 @@ export function SessionList({ sessions, isOpen, onClose }: SessionListProps) {
   }, [restoreSession, onClose]);
 
   const handleExportSession = useCallback((session: Session) => {
-    // Create a temp export data with just this session
+    // Create export data with just this session
     const exportData = {
       version: '1.0.0',
       exportDate: new Date().toISOString(),
@@ -227,17 +228,13 @@ export function SessionList({ sessions, isOpen, onClose }: SessionListProps) {
     };
 
     const jsonString = JSON.stringify(exportData, null, 2);
-    
-    // Create and download file
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `btms-session-${session.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+
+    // Use shared download utility
+    downloadFile({
+      content: jsonString,
+      filename: generateExportFilename(session.name),
+      mimeType: 'application/json'
+    });
   }, []);
 
   // Memoize total counts to avoid recalculation
@@ -313,16 +310,16 @@ export function SessionList({ sessions, isOpen, onClose }: SessionListProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <p>
-                {sessions.length === 0 
-                  ? "No saved sessions yet" 
-                  : searchQuery 
+                {sessions.length === 0
+                  ? "No saved sessions yet"
+                  : searchQuery
                     ? "No sessions match your search"
                     : "No saved sessions yet"
                 }
               </p>
               <p className="text-sm mt-2">
-                {sessions.length === 0 
-                  ? "Start by saving your current browser session!" 
+                {sessions.length === 0
+                  ? "Start by saving your current browser session!"
                   : "Try a different search term"
                 }
               </p>

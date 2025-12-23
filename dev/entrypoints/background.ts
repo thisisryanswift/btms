@@ -138,53 +138,44 @@ export default defineBackground(() => {
       console.log(`💾 Performing auto-save (trigger: ${trigger})...`);
 
       try {
+        // Use unified capture and ID generation (dynamic import for service worker context)
+        const { captureAllWindows } = await import('../src/services/sessions/capture');
+        const { generatePrefixedSessionId } = await import('../src/lib/uuid');
+        const captured = await captureAllWindows({
+          excludeIncognito: true,
+          includeGroups: true,
+        });
+
+        // Skip if no tabs captured
+        if (captured.tabCount === 0) {
+          console.log('⏸️ No tabs to save, skipping auto-save');
+          return null;
+        }
+
         // Generate session data
-        const sessionId = `autosave_${Date.now()}`;
-        const sessionName = `Auto-save ${new Date().toLocaleString()}`;
-
-        // Get current windows and tabs
-        const windows = await chrome.windows.getAll({ populate: true, windowTypes: ['normal'] });
-
         const sessionData = {
-          id: sessionId,
-          name: sessionName,
+          id: generatePrefixedSessionId('auto'),
+          name: `Auto-save ${new Date().toLocaleString()}`,
           createdAt: Date.now(),
           updatedAt: Date.now(),
-          windows: windows.map((window) => ({
-            id: window.id,
-            focused: window.focused || false,
-            incognito: window.incognito || false,
-            state: window.state || 'normal',
-            tabs: (window.tabs || [])
-              .filter((tab) => tab.url && !tab.incognito)
-              .map((tab) => ({
-                id: tab.id!,
-                index: tab.index,
-                url: tab.url!,
-                title: tab.title || '',
-                favicon: tab.favIconUrl,
-                pinned: tab.pinned || false,
-                active: tab.active || false,
-                groupId: tab.groupId,
-              })),
-          })),
-          tabCount: windows.reduce((total, window) =>
-            total + (window.tabs?.filter((t) => t.url && !t.incognito).length || 0), 0),
-          windowCount: windows.length,
+          windows: captured.windows,
+          tabCount: captured.tabCount,
+          windowCount: captured.windowCount,
           isAutoSave: true,
           source: 'auto' as const,
           tags: ['auto-save'],
         };
 
-        // Save to storage
-        const sessions = await this.getSessions();
+        // Save to storage using shared utility
+        const { getSessions, saveSessions } = await import('../src/lib/storage');
+        const sessions = await getSessions();
         sessions.unshift(sessionData); // Add to beginning
-        await chrome.storage.local.set({ sessions });
+        await saveSessions(sessions);
 
         // Cleanup old auto-saves
         await this.cleanupOldAutoSaves();
 
-        console.log(`✅ Auto-save completed: ${sessionName}`);
+        console.log(`✅ Auto-save completed: ${sessionData.name}`);
         return sessionData;
 
       } catch (error) {
@@ -193,16 +184,12 @@ export default defineBackground(() => {
       }
     }
 
-    async getSessions(): Promise<any[]> {
-      const result = await chrome.storage.local.get(['sessions']);
-      return result.sessions || [];
-    }
-
     async cleanupOldAutoSaves() {
       if (!this.settings?.autoSave?.maxSessions) return;
 
       try {
-        const sessions = await this.getSessions();
+        const { getSessions, saveSessions } = await import('../src/lib/storage');
+        const sessions = await getSessions();
         const autoSaves = sessions
           .filter((s: any) => s.isAutoSave)
           .sort((a: any, b: any) => b.createdAt - a.createdAt);
@@ -213,7 +200,7 @@ export default defineBackground(() => {
 
           const toDeleteIds = new Set(toDelete.map((s: any) => s.id));
           const remainingSessions = sessions.filter((s: any) => !toDeleteIds.has(s.id));
-          await chrome.storage.local.set({ sessions: remainingSessions });
+          await saveSessions(remainingSessions);
         }
       } catch (error) {
         console.error('❌ Auto-save cleanup failed:', error);

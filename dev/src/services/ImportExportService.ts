@@ -1,8 +1,10 @@
 import type { Session } from '../types/session';
+import { generatePrefixedSessionId } from '../lib/uuid';
+import { getSessions, saveSessions } from '../lib/storage';
 
 /**
  * Service for importing and exporting session data
- * Uses chrome.storage.local for consistency with other hooks
+ * Uses centralized storage utilities for consistency
  */
 export class ImportExportService {
   private static instance: ImportExportService;
@@ -17,28 +19,13 @@ export class ImportExportService {
   }
 
   /**
-   * Get all sessions from storage
-   */
-  private async getSessions(): Promise<Session[]> {
-    const result = await chrome.storage.local.get('sessions');
-    return result.sessions || [];
-  }
-
-  /**
-   * Save sessions to storage
-   */
-  private async saveSessions(sessions: Session[]): Promise<void> {
-    await chrome.storage.local.set({ sessions });
-  }
-
-  /**
    * Export all sessions to JSON string
    */
   async exportSessions(): Promise<string> {
     console.log('📤 Exporting sessions...');
 
     try {
-      const sessions = await this.getSessions();
+      const sessions = await getSessions();
 
       const exportData = {
         version: '1.0.0',
@@ -66,7 +53,7 @@ export class ImportExportService {
   async exportSingleSession(sessionId: string): Promise<string> {
     console.log(`📤 Exporting session ${sessionId}...`);
 
-    const sessions = await this.getSessions();
+    const sessions = await getSessions();
     const session = sessions.find(s => s.id === sessionId);
 
     if (!session) {
@@ -110,7 +97,7 @@ export class ImportExportService {
       }
 
       // Get existing sessions to check for duplicates
-      const existingSessions = await this.getSessions();
+      const existingSessions = await getSessions();
       const newSessions: Session[] = [...existingSessions];
 
       // Import each session
@@ -119,7 +106,7 @@ export class ImportExportService {
           // Create new session with fresh ID and timestamps
           const newSession: Session = {
             ...sessionData,
-            id: this.generateNewId(),
+            id: generatePrefixedSessionId('import'),
             createdAt: Date.now(),
             updatedAt: Date.now(),
             source: 'import' as const,
@@ -149,7 +136,7 @@ export class ImportExportService {
       }
 
       // Save all sessions
-      await this.saveSessions(newSessions);
+      await saveSessions(newSessions);
 
       console.log(`✅ Import completed: ${result.imported} imported, ${result.duplicates} skipped as duplicates`);
 
@@ -243,13 +230,6 @@ export class ImportExportService {
   }
 
   /**
-   * Generate new session ID
-   */
-  private generateNewId(): string {
-    return `import_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-  }
-
-  /**
    * Get import/export statistics
    */
   async getStatistics(): Promise<{
@@ -258,7 +238,7 @@ export class ImportExportService {
     manualSaves: number;
     importedSessions: number;
   }> {
-    const sessions = await this.getSessions();
+    const sessions = await getSessions();
 
     return {
       totalSessions: sessions.length,

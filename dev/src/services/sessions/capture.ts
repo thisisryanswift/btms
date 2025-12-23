@@ -141,3 +141,113 @@ export async function captureTabsFromWindow(windowId: number, options: CaptureOp
     throw new Error(`Window tab capture failed: ${error}`);
   }
 }
+
+export interface CaptureAllWindowsOptions {
+  excludeIncognito?: boolean;
+  excludeUrls?: string[];
+  includeGroups?: boolean;
+}
+
+export interface CapturedSession {
+  windows: import('../../types/session').SessionWindow[];
+  tabCount: number;
+  windowCount: number;
+}
+
+/**
+ * Capture all windows with their tabs - unified function for session creation
+ * This is the single source of truth for capturing browser state.
+ * Used by both useSessionMutations hook and background auto-save.
+ */
+export async function captureAllWindows(options: CaptureAllWindowsOptions = {}): Promise<CapturedSession> {
+  const {
+    excludeIncognito = true,
+    excludeUrls = [],
+    includeGroups = true,
+  } = options;
+
+  console.log('🔍 Capturing all windows and tabs...');
+
+  try {
+    // Get all normal windows with their tabs
+    const windows = await chrome.windows.getAll({ populate: true, windowTypes: ['normal'] });
+
+    const sessionWindows: import('../../types/session').SessionWindow[] = [];
+    let totalTabCount = 0;
+
+    for (const window of windows) {
+      // Skip incognito windows if excluded
+      if (excludeIncognito && window.incognito) {
+        continue;
+      }
+
+      const tabs = window.tabs || [];
+      const sessionTabs: SessionTab[] = [];
+
+      for (const tab of tabs) {
+        // Skip tabs missing required properties
+        if (!tab.id || !tab.url || !tab.title) continue;
+
+        // Skip incognito tabs if excluding
+        if (excludeIncognito && tab.incognito) continue;
+
+        // Check URL exclusion patterns
+        if (excludeUrls.length > 0) {
+          const isExcluded = excludeUrls.some(pattern => {
+            const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+            return regex.test(tab.url!);
+          });
+          if (isExcluded) continue;
+        }
+
+        const sessionTab: SessionTab = {
+          id: tab.id,
+          index: tab.index,
+          url: tab.url,
+          title: tab.title,
+          favicon: tab.favIconUrl,
+          pinned: tab.pinned || false,
+          active: tab.active || false,
+        };
+
+        // Add tab group information if requested
+        if (includeGroups && tab.groupId && tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE) {
+          sessionTab.groupId = tab.groupId;
+          try {
+            const group = await chrome.tabGroups.get(tab.groupId);
+            sessionTab.groupColor = group.color;
+            sessionTab.groupTitle = group.title;
+          } catch {
+            // Tab group may have been removed, ignore error
+          }
+        }
+
+        sessionTabs.push(sessionTab);
+      }
+
+      // Only include windows with at least one tab
+      if (sessionTabs.length > 0) {
+        sessionWindows.push({
+          id: window.id!,
+          focused: window.focused || false,
+          incognito: window.incognito || false,
+          state: (window.state as 'normal' | 'minimized' | 'maximized' | 'fullscreen') || 'normal',
+          tabs: sessionTabs,
+        });
+        totalTabCount += sessionTabs.length;
+      }
+    }
+
+    console.log(`✅ Captured ${totalTabCount} tabs across ${sessionWindows.length} windows`);
+
+    return {
+      windows: sessionWindows,
+      tabCount: totalTabCount,
+      windowCount: sessionWindows.length,
+    };
+
+  } catch (error) {
+    console.error('❌ Failed to capture windows:', error);
+    throw new Error(`Window capture failed: ${error}`);
+  }
+}

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { Session } from '../types/session';
+import { getSessions } from '../lib/storage';
 
 // Query keys for React Query
 export const QUERY_KEYS = {
@@ -7,11 +8,10 @@ export const QUERY_KEYS = {
   sessionsById: (id: string) => ['sessions', id] as const,
 } as const;
 
-// Simple storage functions using chrome.storage.local
+// Use centralized storage utility
 async function getAllSessionsFromStorage(): Promise<Session[]> {
   try {
-    const result = await chrome.storage.local.get('sessions');
-    return result.sessions || [];
+    return await getSessions();
   } catch (error) {
     console.error('Failed to get sessions:', error);
     return [];

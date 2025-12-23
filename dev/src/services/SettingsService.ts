@@ -1,4 +1,5 @@
 import { DEFAULT_SETTINGS, type BTMSSettings } from '../types/settings';
+import { SETTINGS_STORAGE_KEY } from '../lib/constants';
 
 /**
  * Service for managing BTMS settings using chrome.storage.sync
@@ -6,7 +7,6 @@ import { DEFAULT_SETTINGS, type BTMSSettings } from '../types/settings';
  */
 export class SettingsService {
   private static instance: SettingsService;
-  private static readonly SETTINGS_KEY = 'btms_settings';
 
   private constructor() { }
 
@@ -22,8 +22,8 @@ export class SettingsService {
    */
   async getSettings(): Promise<BTMSSettings> {
     try {
-      const result = await chrome.storage.sync.get(SettingsService.SETTINGS_KEY);
-      const storedSettings = result[SettingsService.SETTINGS_KEY] || {};
+      const result = await chrome.storage.sync.get(SETTINGS_STORAGE_KEY);
+      const storedSettings = result[SETTINGS_STORAGE_KEY] || {};
 
       // Deep merge with defaults to handle new/nested settings
       const mergedSettings = this.deepMerge(DEFAULT_SETTINGS, storedSettings);
@@ -45,7 +45,7 @@ export class SettingsService {
       const newSettings = this.deepMerge(currentSettings, updates);
 
       await chrome.storage.sync.set({
-        [SettingsService.SETTINGS_KEY]: newSettings
+        [SETTINGS_STORAGE_KEY]: newSettings
       });
 
       console.log('💾 Updated settings:', newSettings);
@@ -62,7 +62,7 @@ export class SettingsService {
   async resetSettings(): Promise<BTMSSettings> {
     try {
       await chrome.storage.sync.set({
-        [SettingsService.SETTINGS_KEY]: DEFAULT_SETTINGS
+        [SETTINGS_STORAGE_KEY]: DEFAULT_SETTINGS
       });
 
       console.log('🔄 Reset settings to defaults');
@@ -99,8 +99,8 @@ export class SettingsService {
    */
   onSettingsChanged(callback: (settings: BTMSSettings) => void): void {
     chrome.storage.onChanged.addListener((changes: { [key: string]: chrome.storage.StorageChange }, namespace: string) => {
-      if (namespace === 'sync' && changes[SettingsService.SETTINGS_KEY]) {
-        const newSettings = changes[SettingsService.SETTINGS_KEY].newValue;
+      if (namespace === 'sync' && changes[SETTINGS_STORAGE_KEY]) {
+        const newSettings = changes[SETTINGS_STORAGE_KEY].newValue;
         console.log('🔄 Settings changed:', newSettings);
         callback(newSettings);
       }

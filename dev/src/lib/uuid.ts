@@ -6,13 +6,29 @@ export function generateSessionId(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
   }
-  
+
   // Fallback implementation for older browsers
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
+}
+
+/**
+ * Generate a prefixed session ID for different session sources
+ * @param source - The source type: 'manual', 'auto', or 'import'
+ */
+export function generatePrefixedSessionId(source: 'manual' | 'auto' | 'import' = 'manual'): string {
+  const uuid = generateSessionId();
+  switch (source) {
+    case 'auto':
+      return `auto_${uuid}`;
+    case 'import':
+      return `import_${uuid}`;
+    default:
+      return uuid;
+  }
 }
 
 /**
