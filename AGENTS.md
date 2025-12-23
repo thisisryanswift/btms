@@ -263,7 +263,60 @@ interface BTMSSettings {
 
 ---
 
-## 🚀 For Future Development
+## � Issue Tracking with Beads
+
+**CRITICAL**: This project uses **beads** (`bd` command) for ALL task tracking. Do NOT create markdown TODO lists.
+
+### Essential Commands
+
+```bash
+# Find work
+bd ready                           # Unblocked issues ready to work on
+bd list --status open              # All open issues
+
+# Create and manage
+bd create "Title" --type task --priority 2
+bd create "Subtask" --parent <epic-id>     # Hierarchical subtask
+bd update <id> --status in_progress
+bd close <id>
+
+# Search and view
+bd list --status open --priority 1
+bd show <id>
+
+# Sync (IMPORTANT at end of session!)
+bd sync                            # Export and commit to git
+```
+
+### Workflow
+
+1. **Check ready work**: `bd ready`
+2. **Claim task**: `bd update <id> --status in_progress`
+3. **Work on it**: Implement, test, document
+4. **Discover new work?** `bd create "Found issue" --parent <epic-id>`
+5. **Complete**: `bd close <id>`
+6. **Sync**: `bd sync` (flushes changes to git)
+
+### Priorities
+
+- `0` - Critical (security, data loss, broken builds)
+- `1` - High (major features, important bugs)
+- `2` - Medium (default, nice-to-have)
+- `3` - Low (polish, optimization)
+- `4` - Backlog (future ideas)
+
+### Important Rules
+
+- ✅ Use bd for ALL task tracking
+- ✅ Link discovered work with `--parent` flag
+- ✅ Check `bd ready` before asking "what should I work on?"
+- ✅ Run `bd <cmd> --help` to discover available flags
+- ❌ Do NOT create markdown TODO lists
+- ❌ Do NOT duplicate tracking systems
+
+---
+
+## �🚀 For Future Development
 
 ### Potential Enhancements
 - Semantic search for sessions
@@ -273,10 +326,9 @@ interface BTMSSettings {
 - Side panel implementation
 
 ### Known Limitations
-- IndexedDB service exists but isn't used (storage simplified)
 - Side panel is placeholder only
 - No Firefox support
 
 ---
 
-*Last updated: 2025-12-23*
+*Last updated: 2025-12-23 (code quality cleanup complete, added shared utilities: lib/storage.ts, lib/constants.ts, lib/download.ts)*

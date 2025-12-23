@@ -1,7 +1,6 @@
 import React from 'react';
 import { useSettings, useUpdateSettings, useResetSettings, useExportSettings, useImportSettings } from '../hooks/useSettings';
 import { useExportSessions, useImportSessions } from '../hooks/useImportExport';
-import type { BTMSSettings } from '../types/settings';
 
 export function OptionsApp() {
   const { data: settings, isLoading } = useSettings();
@@ -89,6 +88,27 @@ export function OptionsApp() {
               <option value="fr">Français</option>
               <option value="de">Deutsch</option>
             </select>
+          </div>
+
+          {/* Lazy Load Tabs */}
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Lazy Load Tabs</label>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Restore tabs without loading until clicked (faster restore)</p>
+            </div>
+            <button
+              onClick={() => settings && handleSettingChange('session.lazyLoadTabs', !settings.session.lazyLoadTabs)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                settings?.session.lazyLoadTabs ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
+              }`}
+              disabled={!settings || updateSettingsMutation.isPending}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  settings?.session.lazyLoadTabs ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
           </div>
         </div>
       </div>

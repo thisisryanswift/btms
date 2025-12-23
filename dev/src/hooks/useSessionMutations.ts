@@ -3,6 +3,7 @@ import type { Session } from '../types/session';
 import { captureAllWindows } from '../services/sessions/capture';
 import { generateSessionId } from '../lib/uuid';
 import { addSession, deleteSession, getSession } from '../lib/storage';
+import { SettingsService } from '../services/SettingsService';
 
 // Session capture using unified capture service
 async function captureCurrentSession(options: {
@@ -106,7 +107,13 @@ export function useRestoreSession() {
         throw new Error('Session not found');
       }
 
+      // Get current settings to check lazy loading preference
+      const settingsService = SettingsService.getInstance();
+      const settings = await settingsService.getSettings();
+      const useLazyLoading = settings.session.lazyLoadTabs;
+
       console.log('📋 Restoring session with', session.windows.length, 'windows and', session.tabCount, 'tabs');
+      console.log('🐌 Lazy loading:', useLazyLoading ? 'enabled' : 'disabled');
 
       // Restore each window
       for (const window of session.windows) {
@@ -114,14 +121,38 @@ export function useRestoreSession() {
 
         console.log('🪟 Creating window with', window.tabs.length, 'tabs');
 
-        // Create window with tabs
-        const newWindow = await chrome.windows.create({
-          url: window.tabs.map(tab => tab.url),
-          focused: window.focused,
-          state: window.state,
-        });
+        if (useLazyLoading) {
+          // Lazy loading: Create window first, then add discarded tabs
+          const newWindow = await chrome.windows.create({
+            focused: window.focused,
+            state: window.state,
+          });
 
-        console.log('✅ Created window:', newWindow.id);
+          if (!newWindow.id) {
+            throw new Error('Failed to create window');
+          }
+
+          // Add tabs in discarded state (they won't load until clicked)
+          for (const tab of window.tabs) {
+            await chrome.tabs.create({
+              windowId: newWindow.id,
+              url: tab.url,
+              active: tab.active,
+              discarded: true,
+            });
+          }
+
+          console.log('✅ Created window with discarded tabs:', newWindow.id);
+        } else {
+          // Normal loading: Create window with all tabs at once
+          const newWindow = await chrome.windows.create({
+            url: window.tabs.map(tab => tab.url),
+            focused: window.focused,
+            state: window.state,
+          });
+
+          console.log('✅ Created window:', newWindow.id);
+        }
       }
 
       return session;

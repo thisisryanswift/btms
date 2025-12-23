@@ -2,6 +2,8 @@
  * Utility function for downloading data as a file
  */
 
+import { formatForFilename } from './datetime';
+
 export interface DownloadOptions {
     /** File content (string or Blob) */
     content: string | Blob;
@@ -51,6 +53,6 @@ export function sanitizeFilename(name: string): string {
  */
 export function generateExportFilename(sessionName: string): string {
     const safeName = sanitizeFilename(sessionName);
-    const date = new Date().toISOString().split('T')[0];
+    const date = formatForFilename().split('T')[0];
     return `btms-session-${safeName}-${date}.json`;
 }

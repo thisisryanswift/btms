@@ -1,8 +1,9 @@
-import React, { useState, useMemo, useCallback, memo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import type { Session } from '../types/session';
 import { useDeleteSession, useRestoreSession } from '../hooks/useSessionMutations';
 import { useExportSessions } from '../hooks/useImportExport';
 import { downloadFile, generateExportFilename } from '../lib/download';
+import { formatSmartDate, formatRelativeTime } from '../lib/datetime';
 
 interface SessionListProps {
   sessions: Session[];
@@ -51,7 +52,7 @@ const SessionItem = memo(({
 
   // Memoize formatted date to avoid recalculating on every render
   const formattedDate = useMemo(() => {
-    return new Date(session.createdAt).toLocaleString();
+    return formatSmartDate(session.createdAt);
   }, [session.createdAt]);
 
   // Memoize tab list rendering for expanded view
@@ -185,12 +186,24 @@ export function SessionList({ sessions, isOpen, onClose }: SessionListProps) {
   const exportSessions = useExportSessions();
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
-  // Memoize filtered sessions for search performance
+  // Debounce search input (300ms delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
+
+  // Memoize filtered sessions for search performance (using debounced query)
   const filteredSessions = useMemo(() => {
-    if (!searchQuery.trim()) return sessions;
+    if (!debouncedSearchQuery.trim()) return sessions;
 
-    const query = searchQuery.toLowerCase();
+    const query = debouncedSearchQuery.toLowerCase();
     return sessions.filter(session =>
       session.name.toLowerCase().includes(query) ||
       session.summary?.toLowerCase().includes(query) ||
@@ -202,7 +215,7 @@ export function SessionList({ sessions, isOpen, onClose }: SessionListProps) {
         )
       )
     );
-  }, [sessions, searchQuery]);
+  }, [sessions, debouncedSearchQuery]);
 
   // Memoize session handlers to prevent recreating functions
   const handleToggleExpanded = useCallback((sessionId: string) => {
@@ -283,7 +296,7 @@ export function SessionList({ sessions, isOpen, onClose }: SessionListProps) {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search sessions by name, summary, tags, or tab content..."
+                placeholder="Search sessions by name, summary, tags, or tab content (debounced)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-2 pr-10 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"

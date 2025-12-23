@@ -87,6 +87,11 @@ btms/
 │       │   ├── SessionList.tsx
 │       │   └── OptionsApp.tsx
 │       ├── hooks/            # TanStack Query hooks
+│       ├── lib/              # Shared utilities
+│       │   ├── constants.ts  # Storage keys, query keys
+│       │   ├── download.ts   # File download utility
+│       │   ├── storage.ts    # Session storage operations
+│       │   └── uuid.ts       # ID generation
 │       ├── services/         # AI, Import/Export, Settings
 │       ├── types/            # TypeScript types
 │       └── test/             # Test setup and mocks

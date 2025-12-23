@@ -13,6 +13,9 @@ export class ChromeAIService {
   private static instance: ChromeAIService;
   private model: LanguageModelSession | null = null;
   private isInitialized = false;
+  private sessionCache = new Map<string, any>();
+  private cacheMaxSize = 50;
+  private cacheTTL = 5 * 60 * 1000; // 5 minutes
 
   private constructor() { }
 
@@ -203,27 +206,40 @@ export class ChromeAIService {
       this.model = initResult.model;
     }
 
-    try {
-      const tabInfo = tabs
+try {
+      const tabData = tabs
         .filter(tab => !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://'))
-        .slice(0, 15)
+        .slice(0, 20)
         .map(tab => ({
           title: tab.title,
           url: this.extractDomain(tab.url),
         }));
 
-      if (tabInfo.length === 0) {
+      if (tabData.length === 0) {
         return {
           success: false,
           error: 'No relevant tabs to analyze'
         };
       }
 
-      const prompt = this.buildSessionSummaryPrompt(tabInfo);
-      const response = await this.model.prompt(prompt);
-      const summary = this.cleanSessionSummary(response);
+      // Check cache first
+      const cacheKey = this.generateCacheKey('sessionTags', tabData);
+      const cachedResult = this.getCachedResult<{ success: boolean; tags?: string[]; error?: string }>(cacheKey);
+      
+      if (cachedResult) {
+        return cachedResult;
+      }
 
-      return { success: true, summary };
+      const prompt = this.buildSessionTagsPrompt(tabData);
+      const response = await this.model.prompt(prompt);
+      const tags = this.cleanSessionTags(response);
+      
+      const result = { success: true, tags };
+      
+      // Cache the result
+      this.setCachedResult(cacheKey, result);
+
+      return result;
 
     } catch (error) {
       console.error('❌ Failed to generate session summary:', error);
@@ -255,27 +271,40 @@ export class ChromeAIService {
       this.model = initResult.model;
     }
 
-    try {
-      const tabInfo = tabs
+try {
+      const tabData = tabs
         .filter(tab => !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://'))
-        .slice(0, 20)
+        .slice(0, 10)
         .map(tab => ({
           title: tab.title,
           url: this.extractDomain(tab.url),
         }));
 
-      if (tabInfo.length === 0) {
+      if (tabData.length === 0) {
         return {
           success: false,
           error: 'No relevant tabs to analyze'
         };
       }
 
-      const prompt = this.buildSessionTagsPrompt(tabInfo);
-      const response = await this.model.prompt(prompt);
-      const tags = this.cleanSessionTags(response);
+      // Check cache first
+      const cacheKey = this.generateCacheKey('sessionName', tabData);
+      const cachedResult = this.getCachedResult<{ success: boolean; name?: string; error?: string }>(cacheKey);
+      
+      if (cachedResult) {
+        return cachedResult;
+      }
 
-      return { success: true, tags };
+      const prompt = this.buildSessionNamePrompt(tabData);
+      const response = await this.model.prompt(prompt);
+      const name = this.cleanSessionName(response);
+      
+      const result = { success: true, name };
+      
+      // Cache the result
+      this.setCachedResult(cacheKey, result);
+
+      return result;
 
     } catch (error) {
       console.error('❌ Failed to generate session tags:', error);
@@ -311,6 +340,82 @@ export class ChromeAIService {
   }
 
   // Private helper methods
+
+  /**
+   * Generate cache key from input data
+   */
+  private generateCacheKey(type: string, data: any): string {
+    const hash = this.simpleHash(JSON.stringify({ type, data }));
+    return `${type}_${hash}`;
+  }
+
+  /**
+   * Simple hash function for cache keys
+   */
+  private simpleHash(str: string): string {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash).toString(36);
+  }
+
+  /**
+   * Get cached result if available and not expired
+   */
+  private getCachedResult<T>(key: string): T | null {
+    const cached = this.sessionCache.get(key);
+    if (!cached) return null;
+
+    const now = Date.now();
+    if (now - cached.timestamp > this.cacheTTL) {
+      this.sessionCache.delete(key);
+      return null;
+    }
+
+    console.log(`🎯 Cache hit for ${key}`);
+    return cached.data as T;
+  }
+
+  /**
+   * Store result in cache
+   */
+  private setCachedResult<T>(key: string, data: T): void {
+    // Clean old entries if cache is full
+    if (this.sessionCache.size >= this.cacheMaxSize) {
+      const oldestKey = this.sessionCache.keys().next().value;
+      if (oldestKey) {
+        this.sessionCache.delete(oldestKey);
+      }
+    }
+
+    this.sessionCache.set(key, {
+      data,
+      timestamp: Date.now()
+    });
+    console.log(`💾 Cached result for ${key} (cache size: ${this.sessionCache.size})`);
+  }
+
+  /**
+   * Clear cache
+   */
+  clearCache(): void {
+    this.sessionCache.clear();
+    console.log('🧹 Chrome AI cache cleared');
+  }
+
+  /**
+   * Get cache statistics
+   */
+  getCacheStats(): { size: number; maxSize: number; ttlMinutes: number } {
+    return {
+      size: this.sessionCache.size,
+      maxSize: this.cacheMaxSize,
+      ttlMinutes: this.cacheTTL / (60 * 1000)
+    };
+  }
 
   private extractDomain(url: string): string {
     try {

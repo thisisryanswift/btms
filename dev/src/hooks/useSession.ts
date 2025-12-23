@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { Session } from '../types/session';
-import { getSessions } from '../lib/storage';
+import { getSessions, getSession } from '../lib/storage';
 
 // Query keys for React Query
 export const QUERY_KEYS = {
@@ -15,6 +15,15 @@ async function getAllSessionsFromStorage(): Promise<Session[]> {
   } catch (error) {
     console.error('Failed to get sessions:', error);
     return [];
+  }
+}
+
+async function getSessionById(id: string): Promise<Session | null> {
+  try {
+    return await getSession(id);
+  } catch (error) {
+    console.error('Failed to get session:', error);
+    return null;
   }
 }
 
@@ -35,6 +44,15 @@ export function useSessions() {
     queryKey: QUERY_KEYS.sessions,
     queryFn: getAllSessionsFromStorage,
     staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+}
+
+// Single session by ID
+export function useSession(id: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.sessionsById(id),
+    queryFn: () => getSessionById(id),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 

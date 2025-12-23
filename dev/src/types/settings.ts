@@ -21,9 +21,10 @@ export interface BTMSSettings {
     maxSessions: number;
   };
 
-  session: {
+session: {
     retentionDays: number;
     cleanupEnabled: boolean;
+    lazyLoadTabs: boolean;
   };
 
   ui: {
@@ -60,6 +61,7 @@ export const DEFAULT_SETTINGS: BTMSSettings = {
   session: {
     retentionDays: 30,
     cleanupEnabled: true,
+    lazyLoadTabs: false,
   },
   ui: {
     showTabCount: true,
