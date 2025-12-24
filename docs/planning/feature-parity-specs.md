@@ -26,11 +26,11 @@ As a user with many saved sessions, I want to quickly find a specific session by
 ### Technical Spec
 
 #### Files to Modify
-- `dev/src/components/Popup.tsx` - Add SearchBar component
-- `dev/src/hooks/useSession.ts` - Add filtering logic
+- `src/components/Popup.tsx` - Add SearchBar component
+- `src/hooks/useSession.ts` - Add filtering logic
 
 #### Files to Create
-- `dev/src/components/SearchBar.tsx` - Search input component
+- `src/components/SearchBar.tsx` - Search input component
 
 #### Implementation Details
 
@@ -79,7 +79,7 @@ function filterSessions(sessions: Session[], query: string): Session[] {
 ### Tasks
 
 #### 12.1 Create SearchBar component
-- Create `dev/src/components/SearchBar.tsx`
+- Create `src/components/SearchBar.tsx`
 - Props: value, onChange, placeholder
 - Render: input with magnifying glass icon, X clear button
 - Style: match existing dark theme (bg-gray-800, border-gray-700, etc.)
@@ -145,9 +145,9 @@ chrome.tabs.create({
 Note: `discarded: true` requires the tab to also have `active: false`.
 
 #### Files to Modify
-- `dev/src/types/settings.ts` - Add lazyLoading to settings
-- `dev/src/hooks/useSessionMutations.ts` - Modify restore logic
-- `dev/src/components/OptionsApp.tsx` - Add toggle in General section
+- `src/types/settings.ts` - Add lazyLoading to settings
+- `src/hooks/useSessionMutations.ts` - Modify restore logic
+- `src/components/OptionsApp.tsx` - Add toggle in General section
 
 #### Settings Change
 Add to `BTMSSettings.general`:
@@ -232,7 +232,7 @@ As a user, I want BTMS to automatically capture my tabs when Chrome starts so I 
 ### Technical Spec
 
 #### Background Script Change
-In `dev/entrypoints/background.ts`, add startup detection:
+In `entrypoints/background.ts`, add startup detection:
 
 ```typescript
 // In BTMSBackground class initialize() method:

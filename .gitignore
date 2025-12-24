@@ -78,3 +78,4 @@ unpacked/
 .beads/*.pid
 .beads/*.lock
 .beads/*.log
+dev/

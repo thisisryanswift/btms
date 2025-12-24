@@ -206,7 +206,7 @@ export class ChromeAIService {
       this.model = initResult.model;
     }
 
-try {
+    try {
       const tabData = tabs
         .filter(tab => !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://'))
         .slice(0, 20)
@@ -223,19 +223,19 @@ try {
       }
 
       // Check cache first
-      const cacheKey = this.generateCacheKey('sessionTags', tabData);
-      const cachedResult = this.getCachedResult<{ success: boolean; tags?: string[]; error?: string }>(cacheKey);
-      
+      const cacheKey = this.generateCacheKey('sessionSummary', tabData);
+      const cachedResult = this.getCachedResult<{ success: boolean; summary?: string; error?: string }>(cacheKey);
+
       if (cachedResult) {
         return cachedResult;
       }
 
-      const prompt = this.buildSessionTagsPrompt(tabData);
+      const prompt = this.buildSessionSummaryPrompt(tabData);
       const response = await this.model.prompt(prompt);
-      const tags = this.cleanSessionTags(response);
-      
-      const result = { success: true, tags };
-      
+      const summary = this.cleanSessionSummary(response);
+
+      const result = { success: true, summary };
+
       // Cache the result
       this.setCachedResult(cacheKey, result);
 
@@ -271,7 +271,7 @@ try {
       this.model = initResult.model;
     }
 
-try {
+    try {
       const tabData = tabs
         .filter(tab => !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://'))
         .slice(0, 10)
@@ -288,19 +288,19 @@ try {
       }
 
       // Check cache first
-      const cacheKey = this.generateCacheKey('sessionName', tabData);
-      const cachedResult = this.getCachedResult<{ success: boolean; name?: string; error?: string }>(cacheKey);
-      
+      const cacheKey = this.generateCacheKey('sessionTags', tabData);
+      const cachedResult = this.getCachedResult<{ success: boolean; tags?: string[]; error?: string }>(cacheKey);
+
       if (cachedResult) {
         return cachedResult;
       }
 
-      const prompt = this.buildSessionNamePrompt(tabData);
+      const prompt = this.buildSessionTagsPrompt(tabData);
       const response = await this.model.prompt(prompt);
-      const name = this.cleanSessionName(response);
-      
-      const result = { success: true, name };
-      
+      const tags = this.cleanSessionTags(response);
+
+      const result = { success: true, tags };
+
       // Cache the result
       this.setCachedResult(cacheKey, result);
 

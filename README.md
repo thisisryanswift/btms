@@ -13,20 +13,26 @@ BTMS is a modern, AI-powered browser extension that makes managing browser sessi
 ### Core Session Management
 - **Save Sessions** - Capture all open tabs with one click
 - **Restore Sessions** - Reopen entire sessions in new windows
+- **Lazy Tab Loading** - Restore tabs without loading until clicked (faster restore)
 - **View Sessions** - Browse saved sessions with expandable details
-- **Delete Sessions** - Remove sessions with confirmation
+- **Edit Sessions** - Modify session names and tags
+- **Delete Sessions** - Remove sessions with confirmation dialog
+- **Session Search** - Filter by name, tags, or tab content with debounce
 
 ### AI-Powered Features
 - **Smart Naming** - AI generates meaningful session names based on tab content
 - **Chrome Built-in AI** - Uses local Gemini Nano (no API keys, free, private)
+- **AI Response Caching** - Cached results for better performance
 - **Rule-based Fallback** - Works even when AI isn't available
 
 ### Additional Features
 - **Auto-save** - Automatic periodic saves with configurable intervals
+- **Startup Autosave** - Capture browser state when Chrome launches
 - **Browser Close Detection** - Auto-saves when closing Chrome
 - **Import/Export** - Backup and restore sessions as JSON files
 - **Settings Page** - Full preferences UI (theme, AI options, auto-save config)
 - **Dark Mode** - Full dark mode support throughout
+
 
 ## 🚀 Quick Start
 
@@ -56,7 +62,7 @@ This will open Chrome with the extension loaded. The popup appears when you clic
 npm run build
 ```
 
-Output will be in `dev/.output/chrome-mv3/`
+Output will be in `.output/chrome-mv3/`
 
 ## 🧪 Testing
 
@@ -74,33 +80,26 @@ npm run test:ui
 ## 📁 Project Structure
 
 ```
-btms/
-├── dev/                       # WXT source directory
-│   ├── entrypoints/          # Extension entry points
-│   │   ├── popup/            # Main popup UI
-│   │   ├── options/          # Settings page
-│   │   ├── sidepanel/        # Side panel (placeholder)
-│   │   └── background.ts     # Service worker for auto-save
-│   └── src/
-│       ├── components/       # React components
-│       │   ├── Popup.tsx
-│       │   ├── SessionList.tsx
-│       │   └── OptionsApp.tsx
-│       ├── hooks/            # TanStack Query hooks
-│       ├── lib/              # Shared utilities
-│       │   ├── constants.ts  # Storage keys, query keys
-│       │   ├── download.ts   # File download utility
-│       │   ├── storage.ts    # Session storage operations
-│       │   └── uuid.ts       # ID generation
-│       ├── services/         # AI, Import/Export, Settings
-│       ├── types/            # TypeScript types
-│       └── test/             # Test setup and mocks
-├── docs/                     # Documentation
-│   ├── guides/              # Setup guides
-│   ├── planning/            # Implementation plan
-│   └── research/            # Feature research
-├── wxt.config.ts            # WXT configuration
-├── vitest.config.ts         # Test configuration
+btms/                          # Project root (flat WXT structure)
+├── entrypoints/               # Extension entry points
+│   ├── popup/                 # Main popup UI
+│   ├── options.open-in-tab/   # Settings page
+│   ├── sidepanel/             # Side panel
+│   └── background.ts          # Service worker for auto-save
+├── src/
+│   ├── components/            # React components
+│   │   ├── Popup.tsx
+│   │   ├── SessionList.tsx
+│   │   ├── SessionItem.tsx
+│   │   └── OptionsApp.tsx
+│   ├── hooks/                 # TanStack Query hooks
+│   ├── lib/                   # Shared utilities
+│   ├── services/              # AI, Import/Export, Settings
+│   ├── types/                 # TypeScript types
+│   └── test/                  # Test setup and mocks
+├── docs/                      # Documentation
+├── wxt.config.ts              # WXT configuration
+├── vitest.config.ts           # Test configuration
 └── package.json
 ```
 
@@ -119,19 +118,47 @@ btms/
 
 ## 🧠 Chrome Built-in AI
 
-BTMS uses Chrome's experimental Built-in AI feature for on-device AI processing. 
+BTMS uses Chrome's experimental Built-in AI feature (Gemini Nano) for on-device AI processing. This provides:
+- **Free** - No API keys or subscriptions needed
+- **Private** - All processing happens locally on your device  
+- **Fast** - No network latency after initial model download
 
-### Setup (Linux/Chrome 127+)
+### Enable Chrome AI
 
-1. Enable flags at `chrome://flags`:
-   - `#optimization-guide-on-device-model` → Enabled BypassPerfRequirement
-   - `#prompt-api-for-gemini-nano` → Enabled
+To unlock AI-powered session naming, summaries, and tags:
 
-2. Restart Chrome
+1. **Open Chrome Flags** - Navigate to `chrome://flags`
 
-3. Model downloads automatically on first use (~1.5GB)
+2. **Enable these two flags:**
 
-See `docs/guides/chrome-ai-setup-linux.md` for detailed instructions.
+   | Flag | Set To |
+   |------|--------|
+   | `#optimization-guide-on-device-model` | **Enabled BypassPerfRequirement** |
+   | `#prompt-api-for-gemini-nano` | **Enabled** |
+
+3. **Restart Chrome** - Click the "Relaunch" button
+
+4. **Download the Model** - Navigate to `chrome://components`, find "Optimization Guide On Device Model", and click "Check for update"
+
+5. **Verify** - Open DevTools Console (`F12`) and run:
+   ```javascript
+   await LanguageModel.availability()
+   // Should return: "readily" or "available"
+   ```
+
+> 💡 **Note**: The model is ~1.5-2GB and downloads automatically on first use. First AI call may be slow.
+
+### Without Chrome AI
+
+BTMS works without Chrome AI! When AI is unavailable, it automatically falls back to a **rule-based naming system** that:
+- Analyzes domains (e.g., "github", "stackoverflow")
+- Identifies topics (development, shopping, research)
+- Generates sensible session names from tab patterns
+
+You'll still get intelligent session names – just without the Gemini Nano magic.
+
+See `docs/guides/chrome-ai-setup-linux.md` for detailed platform-specific instructions.
+
 
 ## 📋 Documentation
 

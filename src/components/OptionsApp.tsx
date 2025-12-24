@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSettings, useUpdateSettings, useResetSettings, useExportSettings, useImportSettings } from '../hooks/useSettings';
+import { useApplyTheme } from '../hooks/useApplyTheme';
 import { useExportSessions, useImportSessions } from '../hooks/useImportExport';
 
 export function OptionsApp() {
@@ -12,6 +13,9 @@ export function OptionsApp() {
   const importSessionsMutation = useImportSessions();
   const [isDirty, setIsDirty] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState('general');
+
+  // Apply theme to document
+  useApplyTheme();
 
   // Handle form field changes
   const handleSettingChange = (key: string, value: any) => {
@@ -75,19 +79,11 @@ export function OptionsApp() {
           <div className="flex items-center justify-between">
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Language</label>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Display language</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">More languages coming soon</p>
             </div>
-            <select
-              value={settings?.appearance.language || 'en'}
-              onChange={(e) => handleSettingChange('appearance.language', e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={!settings || updateSettingsMutation.isPending}
-            >
-              <option value="en">English</option>
-              <option value="es">Español</option>
-              <option value="fr">Français</option>
-              <option value="de">Deutsch</option>
-            </select>
+            <div className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-sm">
+              English
+            </div>
           </div>
 
           {/* Lazy Load Tabs */}
@@ -188,7 +184,7 @@ export function OptionsApp() {
         <div className="flex items-center justify-between">
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Enable Auto-Save</label>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Automatically save sessions when closing browser</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Automatically save your current tabs at regular intervals</p>
           </div>
           <button
             onClick={() => settings && handleSettingChange('autoSave.enabled', !settings!.autoSave.enabled)}
@@ -215,8 +211,7 @@ export function OptionsApp() {
               max="60"
               value={settings.autoSave.intervalMinutes}
               onChange={(e) => handleSettingChange('autoSave.intervalMinutes', parseInt(e.target.value))}
-              className="w-full"
-              disabled={updateSettingsMutation.isPending}
+              className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
             />
             <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
               <span>1 min</span>
@@ -230,7 +225,7 @@ export function OptionsApp() {
         <div className="flex items-center justify-between">
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Save on Startup</label>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Capture currently open tabs when Chrome starts</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Capture a snapshot of all open tabs when Chrome starts</p>
           </div>
           <button
             onClick={() => settings && handleSettingChange('autoSave.saveOnStartup', !settings.autoSave.saveOnStartup)}
@@ -407,7 +402,6 @@ export function OptionsApp() {
           </div>
         </div>
       </div>
-
       <div className="text-center space-y-2">
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Better Tab Management System
@@ -415,13 +409,10 @@ export function OptionsApp() {
         <p className="text-xs text-gray-500 dark:text-gray-500">
           AI-powered browser session management
         </p>
-        <div className="pt-2 space-x-4">
-          <a href="https://github.com/rswift/btms" className="text-blue-600 hover:text-blue-800 text-sm">
-            GitHub
-          </a>
-          <a href="https://docs.btms.dev" className="text-blue-600 hover:text-blue-800 text-sm">
-            Documentation
-          </a>
+        <div className="pt-2">
+          <p className="text-xs text-gray-500 italic">
+            Project resources and documentation coming soon
+          </p>
         </div>
       </div>
     </div>

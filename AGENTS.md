@@ -85,64 +85,62 @@ Make browser session management invisible, intelligent, and delightful.
 ## 📁 Project Structure
 
 ```
-btms/
-├── dev/                         # WXT source directory
-│   ├── entrypoints/            # Extension entry points
-│   │   ├── popup/
-│   │   │   ├── index.html
-│   │   │   └── main.tsx       # React entry with QueryClientProvider
-│   │   ├── options/
-│   │   │   ├── index.html
-│   │   │   └── main.tsx
-│   │   ├── sidepanel/
-│   │   └── background.ts       # Auto-save service worker
-│   └── src/
-│       ├── components/
-│       │   ├── Popup.tsx       # Main popup UI
-│       │   ├── SessionList.tsx # Session modal with actions
-│       │   └── OptionsApp.tsx  # Settings page
-│       ├── hooks/
-│       │   ├── useSession.ts         # Read sessions
-│       │   ├── useSessionMutations.ts # Save/delete/restore with AI
-│       │   ├── useSettings.ts        # Settings CRUD
-│       │   └── useImportExport.ts    # Import/Export hooks
-│       ├── services/
-│       │   ├── ai/
-│       │   │   ├── AIService.ts       # Unified AI with fallback
-│       │   │   ├── ChromeAIService.ts # Gemini Nano integration
-│       │   │   └── FallbackAIService.ts
-│       │   ├── SettingsService.ts     # Settings management
-│       │   ├── ImportExportService.ts # JSON import/export
-│       │   ├── sessions/              # Session logic
-│       │   └── storage/               # IndexedDB (legacy, not used)
-│       ├── types/
-│       │   ├── session.ts
-│       │   ├── settings.ts           # Nested settings structure
-│       │   └── chrome-ai.ts          # LanguageModel types
-│       └── test/
-│           └── setup.ts              # Vitest setup with Chrome mocks
+btms/                            # Project root (flat WXT structure)
+├── entrypoints/                 # Extension entry points
+│   ├── popup/
+│   │   ├── index.html
+│   │   └── main.tsx            # React entry with QueryClientProvider
+│   ├── options.open-in-tab/
+│   │   ├── index.html
+│   │   └── main.tsx
+│   ├── sidepanel/
+│   └── background.ts           # Auto-save service worker
+├── src/
+│   ├── components/
+│   │   ├── Popup.tsx           # Main popup UI
+│   │   ├── SessionList.tsx     # Session modal with actions
+│   │   ├── SessionItem.tsx     # Individual session display
+│   │   └── OptionsApp.tsx      # Settings page
+│   ├── hooks/
+│   │   ├── useSession.ts       # Read sessions
+│   │   ├── useSessionMutations.ts # Save/delete/restore with AI
+│   │   ├── useSettings.ts      # Settings CRUD
+│   │   ├── useApplyTheme.ts    # Theme application hook
+│   │   └── useImportExport.ts  # Import/Export hooks
+│   ├── services/
+│   │   ├── ai/
+│   │   │   ├── AIService.ts    # Unified AI with fallback
+│   │   │   ├── ChromeAIService.ts # Gemini Nano integration
+│   │   │   └── FallbackAIService.ts
+│   │   ├── SettingsService.ts  # Settings management
+│   │   ├── ImportExportService.ts # JSON import/export
+│   │   ├── sessions/           # Session logic
+│   │   └── storage/            # Chrome storage utilities
+│   ├── types/
+│   │   ├── session.ts
+│   │   ├── settings.ts         # Nested settings structure
+│   │   └── chrome-ai.ts        # LanguageModel types
+│   └── test/
+│       └── setup.ts            # Vitest setup with Chrome mocks
+├── .output/                     # WXT build output (git-ignored)
+├── .wxt/                        # WXT cache (git-ignored)
 ├── docs/                        # Documentation
-│   ├── guides/
-│   ├── planning/
-│   └── research/
-├── vitest.config.ts            # Test configuration
+├── wxt.config.ts               # WXT configuration
 ├── vitest.config.ts            # Test configuration
 ├── tailwind.config.js
+├── tsconfig.json
 └── package.json
 ```
 
 ### ⚠️ Critical Architecture Notes
 
-1. **WXT config is in `dev/wxt.config.ts`** - NOT in project root!
-2. **All source code is in `dev/`** - entrypoints, src, etc.
-3. **Import paths from entrypoints use `../../src/`** - two levels up
-4. **Storage uses `chrome.storage.local`** - NOT IndexedDB (simplified for reliability)
-5. **Settings use `chrome.storage.sync`** - For cross-device sync
-6. **AI Service uses dynamic import** - Avoids circular dependencies:
-   ```typescript
-   const { AIService } = await import('../services/ai/AIService');
-   ```
-7. **Settings types are NESTED**:
+1. **WXT dev command quirk** - WXT auto-detects folders named `dev` as srcDir!
+   - We use `wxt .` instead of `wxt dev` in package.json scripts
+   - This explicitly tells WXT to use the current directory as root
+2. **Flat project structure** - entrypoints/ and src/ at project root
+3. **Storage uses `chrome.storage.local`** - NOT IndexedDB (simplified for reliability)
+4. **Settings use `chrome.storage.sync`** - For cross-device sync
+5. **Settings types are NESTED**:
    ```typescript
    settings.appearance.theme    // NOT settings.theme
    settings.ai.autoNaming       // NOT settings.aiNaming
@@ -318,17 +316,26 @@ bd sync                            # Export and commit to git
 
 ## �🚀 For Future Development
 
+### Recent Additions (December 2025)
+- ✅ Lazy Tab Loading - Restore tabs without loading until clicked
+- ✅ Session Search - Filter by name, tags, and tab content with debounce
+- ✅ Startup Autosave - Capture browser state on Chrome launch
+- ✅ Confirm Dialogs - Delete/restore confirmations
+- ✅ Session Edit Modal - Edit session name and tags
+- ✅ AI Response Caching - ChromeAIService caches results
+- ✅ Shared Utilities - lib/storage.ts, lib/constants.ts, lib/download.ts, lib/datetime.ts
+
 ### Potential Enhancements
 - Semantic search for sessions
-- Tab group support
 - Session sharing between devices
-- More AI features (summaries, tagging)
 - Side panel implementation
+- Tab group restoration
 
 ### Known Limitations
 - Side panel is placeholder only
 - No Firefox support
+- Tab groups cannot be restored (Chrome API limitation)
 
 ---
 
-*Last updated: 2025-12-23 (code quality cleanup complete, added shared utilities: lib/storage.ts, lib/constants.ts, lib/download.ts)*
+*Last updated: 2025-12-23 (all beads complete, added lazy loading, session search, startup autosave, and useAI hooks)*

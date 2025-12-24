@@ -8,16 +8,18 @@
 ## ⚠️ IMPORTANT NOTES
 
 ### Project Structure
-All source code lives in the `dev/` folder:
-- `dev/wxt.config.ts` - WXT configuration (NOT in project root!)
-- `dev/entrypoints/` - popup, options, sidepanel, background
-- `dev/src/` - components, hooks, services, types, assets
+This project uses a **flat WXT structure** (source at project root):
+- `wxt.config.ts` - WXT configuration (at project root)
+- `entrypoints/` - popup, options, sidepanel, background
+- `src/` - components, hooks, services, types, assets
+
+**Note**: The npm dev script uses `wxt .` instead of `wxt dev` to avoid WXT auto-detecting a folder named "dev" as the srcDir.
 
 ### Import Paths
-From entrypoint files (e.g., `dev/entrypoints/popup/main.tsx`), use:
+From entrypoint files (e.g., `entrypoints/popup/main.tsx`), use:
 ```typescript
-import '../../src/assets/styles.css';
-import { Popup } from '../../src/components/Popup';
+import '../src/assets/styles.css';
+import { Popup } from '../src/components/Popup';
 ```
 
 ---

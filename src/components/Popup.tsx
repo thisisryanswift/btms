@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { useSessions, useSessionStats } from '../hooks/useSession';
 import { useCaptureCurrentSession } from '../hooks/useSessionMutations';
+import { useApplyTheme } from '../hooks/useApplyTheme';
 import { SessionList } from './SessionList';
 
 export function Popup() {
+  // Apply theme to document
+  useApplyTheme();
   const [useAINaming, setUseAINaming] = useState(true);
   const [isSessionListOpen, setIsSessionListOpen] = useState(false);
 
@@ -31,7 +34,7 @@ export function Popup() {
   };
 
   return (
-    <div className="min-w-[400px] min-h-[500px] p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div className="w-full min-h-screen p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <div className="space-y-4">
         <header className="flex justify-between items-center border-b pb-2">
           <div className="flex items-center space-x-2">

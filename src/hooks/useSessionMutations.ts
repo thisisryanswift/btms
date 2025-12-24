@@ -4,6 +4,7 @@ import { captureAllWindows } from '../services/sessions/capture';
 import { generateSessionId } from '../lib/uuid';
 import { addSession, deleteSession, getSession, updateSession } from '../lib/storage';
 import { SettingsService } from '../services/SettingsService';
+import { AIService } from '../services/ai/AIService';
 
 export function useUpdateSession() {
   const queryClient = useQueryClient();
@@ -49,8 +50,6 @@ async function captureCurrentSession(options: {
   if (!sessionName && options.useAINaming) {
     console.log('🤖 Generating AI session name...');
     try {
-      // Import AI service dynamically to avoid circular imports
-      const { AIService } = await import('../services/ai/AIService');
       const aiService = AIService.getInstance();
 
       const aiResult = await aiService.generateSessionName(allTabs);

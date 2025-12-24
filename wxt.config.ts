@@ -1,7 +1,6 @@
 import { defineConfig } from 'wxt';
 
 export default defineConfig({
-    srcDir: '.',
     modules: ['@wxt-dev/module-react'],
     manifest: {
         name: 'BTMS - Better Tab Management System',
@@ -9,6 +8,10 @@ export default defineConfig({
         description: 'AI-powered browser session management',
         permissions: ['tabs', 'storage', 'tabGroups', 'windows', 'sidePanel', 'alarms'],
         optional_permissions: ['history'],
+        options_ui: {
+            page: 'options.html',
+            open_in_tab: true
+        },
         side_panel: {
             default_path: 'sidepanel.html'
         },
